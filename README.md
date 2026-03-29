@@ -1,24 +1,34 @@
-![logo_ironhack_blue 7](https://user-images.githubusercontent.com/23629340/40541063-a07a0a8a-601a-11e8-91b5-2f13e4e6b441.png)
+# Abstractive Question Answering with RAG
 
-# Lab | Abstractive Question Answering
+An end-to-end pipeline that generates natural language answers to open-ended questions by retrieving semantically relevant Wikipedia passages and synthesising a response. → [Notebook](lab_abstractive_question_answering(1).ipynb)
 
-## Getting Started
+## What it demonstrates
 
-Follow the instructions provided in the notebook.
+This is a working implementation of **Retrieval-Augmented Generation (RAG)** — the architecture that sits behind most production Q&A systems today. Instead of a model trying to answer from memory alone, it first retrieves relevant context, then generates an answer grounded in that context. The notebook makes the failure mode explicit too: when no relevant context is found (e.g. a question about COVID-19 against a history-only dataset), the generator hallucinates — showing why retrieval quality is the bottleneck, not generation.
 
-Read the instructions for each cell and provide your answers. Make sure to test your answers in each cell and save. Jupyter Notebook should automatically save your work progress. But it's a good idea to periodically save your work manually just in case.
+## Key technical decisions worth noting
 
-## Deliverables
+- **Semantic search, not keyword search.** Passages are embedded as 768-dimensional vectors (MPNet SentenceTransformer) and stored in Pinecone. A query for "Napoleon's defeat" surfaces documents about "Bonaparte's final campaign" or "the Battle of Waterloo's outcome" — exact phrase matching would miss these entirely.
+- **Cosine similarity as the distance metric.** The retriever (microsoft/mpnet-base) is explicitly optimised for cosine similarity, so the Pinecone index is configured to match. Using dot product or Euclidean distance here would degrade retrieval quality.
+- **Streaming dataset loading.** The source dataset (Wiki Snippets) is 9 GB. The notebook loads it in streaming mode so only the 10,000 filtered "History" passages are ever pulled into memory.
+- **ELI5-BART as the generator.** This seq2seq model was fine-tuned on the "Explain Like I'm 5" dataset, making it better at synthesising readable answers from noisy retrieved contexts rather than copying spans verbatim (extractive QA).
+- **Batched upsert.** Embeddings are generated and pushed to Pinecone in batches to avoid memory pressure and reduce API round-trips.
 
-- Downloaded notebook with your responses to each of the exercises.
+## Stack
 
+| Component | Tool |
+|---|---|
+| Vector database | Pinecone |
+| Retriever | `sentence-transformers/multi-qa-mpnet-base-dot-v1` |
+| Generator | `yjernite/bart_eli5` (ELI5 BART) |
+| Dataset | Wiki Snippets via HuggingFace Datasets (streaming) |
+| Runtime | Python 3, Jupyter Notebook |
 
-## Submission
+## How to run
 
-- Upon completion, add your deliverables to git. 
-- Then commit git and push your branch to the remote.
-- Make a pull request and paste the PR link in the submission field in the Student Portal.
-
-<br>
-
-**Good luck!**
+1. Get a free Pinecone API key at [app.pinecone.io](https://app.pinecone.io/) and add it to `.env`:
+   ```
+   PINECONE_API_KEY=your_key_here
+   ```
+2. Install dependencies (the notebook's first cells handle this, but expect a fresh install to take a few minutes due to `transformers` + `sentence-transformers`).
+3. Run the notebook top to bottom. Embedding 10,000 passages takes ~5–10 minutes on CPU; use a GPU runtime if available.

@@ -1,0 +1,22 @@
+AI Engineering Notes
+
+Retrieval-Augmented Generation (RAG) combines information retrieval with a language model.
+A typical RAG pipeline loads documents, splits them into chunks, creates vector embeddings,
+stores the embeddings in a vector database, retrieves relevant chunks for a user question,
+and then asks a language model to answer using the retrieved context.
+
+Vector databases are useful when applications need semantic search rather than exact keyword
+matching. Embeddings place semantically similar text near each other in vector space.
+
+Jupyter notebooks are commonly used by AI engineers for experiments, exploratory data analysis,
+model evaluation, and teaching because they mix executable code, text, tables, and visual outputs.
+
+FastAPI is a common Python choice for exposing machine-learning inference or RAG functionality
+through HTTP APIs. It provides automatic OpenAPI documentation and type-driven request validation.
+
+In production AI systems, evaluation should cover both retrieval and generation. Useful RAG
+metrics include retrieval relevance, answer faithfulness, answer correctness, latency, and cost.
+
+Clean architecture keeps domain logic independent from frameworks and external infrastructure.
+For an AI application, model providers, vector databases, and web frameworks should be treated
+as replaceable adapters around stable application and domain logic.

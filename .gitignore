@@ -1,3 +1,5 @@
 .venv
 .env
 .DS_Store
+.ipynb_checkpoints/
+history_passages_*.jsonl
